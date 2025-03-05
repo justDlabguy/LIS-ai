@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(TECHNICIAN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  samples   Sample[]
+}
+
+model Sample {
+  id            String         @id @default(uuid())
+  barcode       String        @unique
+  patientName   String
+  patientId     String
+  status        SampleStatus  @default(REGISTERED)
+  testResults   TestResult[]
+  createdBy     User          @relation(fields: [userId], references: [id])
+  userId        String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model TestResult {
+  id          String    @id @default(uuid())
+  sample      Sample    @relation(fields: [sampleId], references: [id])
+  sampleId    String
+  testType    TestType
+  rawData     Json
+  aiAnalysis  Json?
+  status      TestStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum Role {
+  ADMIN
+  TECHNICIAN
+  PATHOLOGIST
+}
+
+enum SampleStatus {
+  REGISTERED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum TestType {
+  BLOOD_COUNT
+  BIOCHEMISTRY
+  URINALYSIS
+  MICROBIOLOGY
+}
+
+enum TestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+} 
